@@ -4,7 +4,8 @@
     <string name="title_section1">動態牆</string>
     <string name="title_section2">發文</string>
     <string name="title_section3">加入人員資料</string>
-    <string name="title_section4">設定</string>
+    <string name="title_section4">測試發文</string>
+    <string name="title_section5">設定</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

@@ -1,51 +1,56 @@
 package com.example.zoo88115.projecttest;
 
 
-import android.content.ContentResolver;
+import android.app.ActionBar;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.provider.MediaStore;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class AddFragment extends Fragment {
-
-    Bitmap viewImage=null;
-    private EditText n;
-    private Button b,rotateButton;
-    private Button testAdd,testUse,open;
-    private Button t1,t2;
-    private ImageView picture,testPic;
+public class AddStatusFragment extends Fragment {
     static int TAKE_PICTURE = 1;
     private String filename;
     Uri fileUri;
     static int PHOTO=2;
+    public Button post,addPohot,takePhoto;
+    public ImageView photo;
+    public EditText status;
+    public Spinner chooseUser;
+    public Bitmap bitmap2=null;
+    public String[] user;
+    public Integer[] userId;
+    public ArrayAdapter<String> arrayAdapter;
+    public EditText addTime;
+    Button t;
+    EditText tp;
 
-    public AddFragment() {
+    public AddStatusFragment() {
         // Required empty public constructor
     }
 
@@ -54,32 +59,9 @@ public class AddFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView= inflater.inflate(R.layout.fragment_add, container, false);
-        t1=(Button)rootView.findViewById(R.id.button4);
-        t1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] data;
-                data=iconToByte();
-                if(data!=null) {
-                    MyDBHelper dbHelper = new MyDBHelper(getActivity());
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    ContentValues values = new ContentValues();
-                    values.put("TestIcon", data);
-                    db.insert("Test", null, values);
-                    db.close();
-                    dbHelper.close();
-                    Toast.makeText(getActivity(),"新增成功",Toast.LENGTH_SHORT).show();
-                }
-                else
-                    Toast.makeText(getActivity(),"沒圖片新增失敗",Toast.LENGTH_SHORT).show();
-                }
-        });
-        testPic=(ImageView)rootView.findViewById(R.id.imageView2);
-        picture=(ImageView)rootView.findViewById(R.id.addIcon);
-        //testPic=(ImageView)rootView.findViewById(R.id.imageView2);
-        open=(Button)rootView.findViewById(R.id.button3);
-        open.setOnClickListener(new View.OnClickListener() {
+        View view=inflater.inflate(R.layout.fragment_add_status, container, false);
+        addPohot=(Button)view.findViewById(R.id.button8);
+        addPohot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent();
@@ -88,71 +70,86 @@ public class AddFragment extends Fragment {
                 startActivityForResult(intent,PHOTO);
             }
         });
-        b=(Button)rootView.findViewById(R.id.button5);
-        n=(EditText)rootView.findViewById(R.id.addName);
-        rotateButton=(Button)rootView.findViewById(R.id.rotateButton);
-        rotateButton.setOnClickListener(new View.OnClickListener() {
+        t=(Button)view.findViewById(R.id.button11);
+        tp=(EditText)view.findViewById(R.id.editText3);
+        t.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(viewImage!=null) {
-                    Bitmap bitmap;
-                    bitmap = viewImage;
-
-
-                    // create new matrix
-                    Matrix matrix = new Matrix();
-                    // setup rotation degree
-                    matrix.postRotate(90);
-                    Bitmap bt = Bitmap.createBitmap(bitmap,0,0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                    viewImage=bt;
-                    picture.setImageBitmap(viewImage);
-                }
+                DataRetrieve dataRetrieve=new DataRetrieve(getActivity());
+                dataRetrieve.getData("aaaaa");
             }
         });
-        testAdd=(Button)rootView.findViewById(R.id.button6);
-        testAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] data;
-                data=iconToByte();
-                if(data!=null && n.getText().toString().equals("")!=true) {
-                    MyDBHelper dbHelper = new MyDBHelper(getActivity());
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    ContentValues values = new ContentValues();
-                    values.put("Name",n.getText().toString());
-                    values.put("Icon", data);
-                    db.insert("User", null, values);
-                    db.close();
-                    dbHelper.close();
-                    Toast.makeText(getActivity(),"新增成功",Toast.LENGTH_SHORT).show();
-                    MainActivity m=(MainActivity)getActivity();
-                    m.onNavigationDrawerItemSelected(0);
-                }
-                else
-                    Toast.makeText(getActivity(),"沒圖片新增失敗",Toast.LENGTH_SHORT).show();
-            }
-        });
-        //下面是使用資料庫圖片
-        t2=(Button)rootView.findViewById(R.id.button7);
-        t2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bitmap bitmap;
-                bitmap=getByteToBitmap();
-                if(bitmap!=null){
-                    testPic.setImageBitmap(bitmap);
-                }
-                else
-                    Toast.makeText(getActivity(),"no data",Toast.LENGTH_SHORT).show();
-            }
-        });
-        b.setOnClickListener(new View.OnClickListener() {
+        addTime=(EditText)view.findViewById(R.id.addTime);
+        takePhoto=(Button)view.findViewById(R.id.button9);
+        takePhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 takePicture();
             }
         });
-        return rootView;
+        post=(Button)view.findViewById(R.id.button10);
+        post.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    java.util.Date date = new java.util.Date();
+                    MyDBHelper myDBHelper = new MyDBHelper(getActivity());
+                    SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                    ContentValues values = new ContentValues();
+                    if(bitmap2!=null) {
+                        //===================圖片轉byte
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap2.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                        byte bytes[] = stream.toByteArray();
+                        //====================
+                        values.put("Photo", bytes);
+                    }
+                    values.put("Time",date.getTime()+Integer.valueOf(addTime.getText().toString())*1000);
+                    if(bitmap2==null)
+                    values.put("Content", status.getText().toString());
+                    values.put("UserID", userId[chooseUser.getSelectedItemPosition()]);
+                    db.insert("Status", null, values);
+                    db.close();
+                    myDBHelper.close();
+                }
+                catch(Exception e){
+                    Toast.makeText(getActivity(),e.toString(),Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        photo=(ImageView)view.findViewById(R.id.imageView);
+        photo.setVisibility(View.GONE);//不保留空間
+        status=(EditText)view.findViewById(R.id.editText2);
+        chooseUser=(Spinner)view.findViewById(R.id.chooseUser);
+        Readdata();
+        arrayAdapter=new ArrayAdapter<String>(getActivity(),R.layout.support_simple_spinner_dropdown_item,user);
+        chooseUser.setAdapter(arrayAdapter);
+        return view;
+    }
+
+    public void Readdata(){
+        ArrayList<String> user2 = new ArrayList<String>();
+        ArrayList<Integer> userId2=new ArrayList<Integer>();
+        MyDBHelper myDBHelper=new MyDBHelper(getActivity());
+        SQLiteDatabase db=myDBHelper.getReadableDatabase();
+        Cursor cursor=db.query("User",
+                new String[]{"ID","Name"},
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        if(cursor!=null && cursor.getCount()>0){
+            cursor.moveToFirst();
+            for(int i=0;i<cursor.getCount();i++){
+                userId2.add(cursor.getInt(0));
+                user2.add(cursor.getString(1));
+                cursor.moveToNext();
+            }
+        }
+        user=user2.toArray(new String[user2.size()]);
+        userId=(Integer[]) userId2.toArray(new Integer[userId2.size()]);
     }
 
     public void takePicture() {
@@ -161,20 +158,24 @@ public class AddFragment extends Fragment {
         Intent intentCamera =  new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         String fileName=FileUtil.getUniqueFileName()+".jpg";
         File pictureFile = new File(FileUtil.getExternalStorageDir(FileUtil.APP_DIR),fileName);
-        fileUri=Uri.fromFile(pictureFile);
+        fileUri= Uri.fromFile(pictureFile);
         intentCamera.putExtra(MediaStore.EXTRA_OUTPUT,fileUri);
         startActivityForResult(intentCamera, TAKE_PICTURE);
     }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode==TAKE_PICTURE && resultCode==MainActivity.RESULT_OK){
             try {
                 MainActivity m = (MainActivity) getActivity();
-                viewImage = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
-                viewImage=comp(viewImage);
-                picture.setImageBitmap(viewImage);
+                bitmap2 = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
+                bitmap2=comp(bitmap2);
+                photo.setImageBitmap(bitmap2);
+                photo.setVisibility(View.VISIBLE);
+                ViewGroup.LayoutParams params = photo.getLayoutParams();
+                params.width = ActionBar.LayoutParams.MATCH_PARENT;
+                params.height = 400;
+                photo.setLayoutParams(params);
             }
             catch(Exception e){
 
@@ -184,9 +185,14 @@ public class AddFragment extends Fragment {
             try {
                 MainActivity m = (MainActivity) getActivity();
                 fileUri = data.getData();
-                viewImage = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
-                viewImage = comp(viewImage);
-                picture.setImageBitmap(viewImage);
+                bitmap2 = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
+                bitmap2 = comp(bitmap2);
+                photo.setImageBitmap(bitmap2);
+                photo.setVisibility(View.VISIBLE);
+                ViewGroup.LayoutParams params = photo.getLayoutParams();
+                params.width = ActionBar.LayoutParams.MATCH_PARENT;
+                params.height = 400;
+                photo.setLayoutParams(params);
             }
             catch(Exception e){
 
@@ -199,9 +205,9 @@ public class AddFragment extends Fragment {
         super.onResume();
         try {
             MainActivity m = (MainActivity) getActivity();
-            viewImage = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
-            viewImage=comp(viewImage);
-            picture.setImageBitmap(viewImage);
+            bitmap2 = MediaStore.Images.Media.getBitmap(m.getContentResolver(), fileUri);
+            bitmap2=comp(bitmap2);
+            photo.setImageBitmap(bitmap2);
         }
         catch(Exception e){
 
@@ -209,8 +215,8 @@ public class AddFragment extends Fragment {
     }
 
     public byte[] iconToByte(){
-        if(viewImage!=null) {
-            Bitmap bmp = viewImage;
+        if(bitmap2!=null) {
+            Bitmap bmp = bitmap2;
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bmp.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte bytes[] = stream.toByteArray();
@@ -234,7 +240,7 @@ public class AddFragment extends Fragment {
         if(cursor!=null && cursor.getCount()>0){
             cursor.moveToLast();
             b=cursor.getBlob(0);
-            bitmap=BitmapFactory.decodeByteArray(b,0,b.length);
+            bitmap= BitmapFactory.decodeByteArray(b, 0, b.length);
             db.close();
             dbHelper.close();
             return bitmap;

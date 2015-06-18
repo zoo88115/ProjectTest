@@ -74,6 +74,9 @@ public class MainActivity extends ActionBarActivity
             case 2:
                 fragment=new AddFragment();
                 break;
+            case 3:
+                fragment=new AddStatusFragment();
+                break;
             case 99:
                 fragment=new PostNewsFragment();
                 break;
@@ -97,6 +100,9 @@ public class MainActivity extends ActionBarActivity
                 break;
             case 4:
                 mTitle = getString(R.string.title_section4);
+                break;
+            case 5:
+                mTitle = getString(R.string.title_section5);
                 break;
         }
     }
