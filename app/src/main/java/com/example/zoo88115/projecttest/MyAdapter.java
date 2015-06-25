@@ -1,6 +1,8 @@
 package com.example.zoo88115.projecttest;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
@@ -10,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -18,34 +21,27 @@ import java.util.ArrayList;
  * Created by zoo88115 on 2015/6/10 0010.
  */
 public class MyAdapter extends BaseAdapter{
-
+    java.util.Date now = new java.util.Date();
     private Context mContext;
     private static LayoutInflater inflater = null;
-    ArrayList<Integer> sID;
-    ArrayList<String> sTime;
-    ArrayList<byte[]> sPhoto;
-    ArrayList<String> sContent;
-    ArrayList<Integer> uID;
-    ArrayList<byte[]> uIcon;
-    ArrayList<String> uName;
-    View[] v;
-    public int count;
+    ArrayList<Integer> sID=new ArrayList<Integer>();
+    ArrayList<String> sTime=new  ArrayList<String>();
+    ArrayList<byte[]> sPhoto=new ArrayList<byte[]>();
+    ArrayList<String> sContent=new  ArrayList<String>();
+    ArrayList<Integer> uID=new ArrayList<Integer>();
+    ArrayList<byte[]> uIcon=new ArrayList<byte[]>();
+    ArrayList<String> uName=new  ArrayList<String>();
+    ArrayList<View> v=new ArrayList<View>();
+    public int count=3;
+    long lastTime;
     int p=0;
 
-    public MyAdapter(Context c,ArrayList<Integer> sID,ArrayList<String> sTime,ArrayList<byte[]> sPhoto,ArrayList<String> sContent,ArrayList<Integer> uID,
-                     ArrayList<byte[]> uIcon,ArrayList<String> uName,int count) {
+    public MyAdapter(Context c,long lastTime) {
         mContext = c;
         inflater = (LayoutInflater)
                 mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.sID=sID;
-        this.sTime=sTime;
-        this.sPhoto=sPhoto;
-        this.sContent=sContent;
-        this.uID=uID;
-        this.uIcon=uIcon;
-        this.uName=uName;
-        this.count=count;
-        this.v=new View[count+1];
+        this.lastTime=lastTime;
+        firstGetData();
     }
 
 
@@ -66,8 +62,8 @@ public class MyAdapter extends BaseAdapter{
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-
-        if(v[position] == null){
+        View tempView=v.get(position);
+        if(tempView == null){
             if(position == 0 ){
                 convertView=inflater.inflate(R.layout.post_layout,null);
                 TextView post=(TextView)convertView.findViewById(R.id.postTextView);
@@ -103,8 +99,77 @@ public class MyAdapter extends BaseAdapter{
                 }
                 contentView.setText(sContent.get(position-1));
             }
-            v[position]=convertView;
+            v.add(position,convertView);
         }
-        return v[position];
+        return v.get(position);
+    }
+
+    public void firstGetData() {
+        try {
+            MyDBHelper myDBHelper = new MyDBHelper(mContext);
+            SQLiteDatabase db = myDBHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name " +
+                    "FROM Status,User " +
+                    "WHERE Status.UserID=User.ID and Status.Time<=" +lastTime+" "+
+                    "ORDER BY Status.Time DESC", null);
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                if(cursor.getCount()<count)
+                    count=cursor.getCount();
+                for (int i = 0; i < count; i++) {
+                    sID.add(cursor.getInt(0));
+                    sTime.add(new java.text.SimpleDateFormat("yyyy MM-dd HH:mm:ss").format(new java.util.Date (cursor.getLong(1))));
+                    sPhoto.add(cursor.getBlob(2));
+                    sContent.add(cursor.getString(3));
+                    uID.add(cursor.getInt(4));
+                    uIcon.add(cursor.getBlob(5));
+                    uName.add(cursor.getString(6));
+                    v.add(null);
+                    cursor.moveToNext();
+                }
+            }
+            db.close();
+            myDBHelper.close();
+        }
+        catch (Exception e){
+            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void newGetData() {
+        java.util.Date now = new java.util.Date();
+        long nowTime=now.getTime();
+        try {
+            MyDBHelper myDBHelper = new MyDBHelper(mContext);
+            SQLiteDatabase db = myDBHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name " +
+                    "FROM Status,User " +
+                    "WHERE Status.UserID=User.ID and Status.Time>" +lastTime+" and Status.Time<="+nowTime+" "+
+                    "ORDER BY Status.Time ASC", null);//按時間順序
+            if (cursor != null && cursor.getCount() > 0) {
+                int round=3;
+                if(cursor.getCount()<round)
+                    round=cursor.getCount();
+                count+=round;//新增增加count量
+                cursor.moveToFirst();
+                for (int i = 0; i < round; i++) {//新增資料全從第一個開始
+                    sID.add(0,cursor.getInt(0));
+                    sTime.add(0,new java.text.SimpleDateFormat("yyyy MM-dd HH:mm:ss").format(new java.util.Date(cursor.getLong(1))));
+                    sPhoto.add(0,cursor.getBlob(2));
+                    sContent.add(0,cursor.getString(3));
+                    uID.add(0,cursor.getInt(4));
+                    uIcon.add(0,cursor.getBlob(5));
+                    uName.add(0,cursor.getString(6));
+                    v.add(1,null);
+                    cursor.moveToNext();
+                }
+            }
+            lastTime=nowTime;
+            db.close();
+            myDBHelper.close();
+        }
+        catch (Exception e){
+            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

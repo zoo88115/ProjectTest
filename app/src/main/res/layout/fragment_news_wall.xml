@@ -10,12 +10,34 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent">
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:orientation="horizontal"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:text="更新中"
-            android:id="@+id/updateText"
-            android:gravity="center_horizontal" />
+            android:layout_height="22dp"
+            android:weightSum="1">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/textView2"
+                android:layout_weight="1.06" />
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:id="@+id/imageView3"
+                android:src="@drawable/wait"
+                />
+
+            <TextView
+                android:layout_width="193dp"
+                android:layout_height="22dp"
+                android:text="更新中"
+                android:id="@+id/updateText"
+                android:gravity="center_vertical|center_horizontal" />
+
+        </LinearLayout>
 
         <ListView
             android:layout_width="fill_parent"
@@ -26,6 +48,7 @@
             android:divider="#00ff0515"
             android:dividerHeight="5dp"
             android:layout_alignParentBottom="true" />
+
     </LinearLayout>
 
 </RelativeLayout>

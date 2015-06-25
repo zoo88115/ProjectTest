@@ -1,0 +1,80 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.zoo88115.blackjack.RegisterFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:ems="10"
+        android:id="@+id/editEmail"
+        android:layout_marginTop="76dp"
+        android:hint="輸入帳號(email)"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:textSize="30dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:ems="10"
+        android:id="@+id/editPassword"
+        android:hint="輸入密碼"
+        android:layout_below="@+id/editEmail"
+        android:layout_alignStart="@+id/editEmail"
+        android:textSize="30dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:ems="10"
+        android:id="@+id/editPasswordCheck"
+        android:hint="確認密碼"
+        android:layout_below="@+id/editPassword"
+        android:layout_alignStart="@+id/editPassword"
+        android:textSize="30dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:id="@+id/editName"
+        android:hint="輸入姓名"
+        android:layout_below="@+id/editPasswordCheck"
+        android:layout_alignStart="@+id/editPasswordCheck"
+        android:textSize="30dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="確定"
+        android:id="@+id/btnCheck"
+        android:textSize="30dp"
+        android:layout_marginTop="69dp"
+        android:layout_below="@+id/editName"
+        android:layout_alignStart="@+id/editName" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="重設"
+        android:id="@+id/btnClear"
+        android:textSize="30dp"
+        android:layout_alignTop="@+id/btnCheck"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="返回"
+        android:id="@+id/returnMain"
+        android:textSize="30dp"
+        android:layout_alignTop="@+id/btnClear"
+        android:layout_alignEnd="@+id/editName" />
+</RelativeLayout>
