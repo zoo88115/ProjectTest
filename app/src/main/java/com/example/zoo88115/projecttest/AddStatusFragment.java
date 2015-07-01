@@ -70,15 +70,7 @@ public class AddStatusFragment extends Fragment {
                 startActivityForResult(intent,PHOTO);
             }
         });
-        t=(Button)view.findViewById(R.id.button11);
         tp=(EditText)view.findViewById(R.id.editText3);
-        t.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DataRetrieve dataRetrieve=new DataRetrieve(getActivity());
-                dataRetrieve.getData("aaaaa");
-            }
-        });
         addTime=(EditText)view.findViewById(R.id.addTime);
         takePhoto=(Button)view.findViewById(R.id.button9);
         takePhoto.setOnClickListener(new View.OnClickListener() {

@@ -1,11 +1,16 @@
 package com.example.zoo88115.projecttest;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +21,7 @@ import android.widget.Toast;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by zoo88115 on 2015/6/10 0010.
@@ -31,10 +37,13 @@ public class MyAdapter extends BaseAdapter{
     ArrayList<Integer> uID=new ArrayList<Integer>();
     ArrayList<byte[]> uIcon=new ArrayList<byte[]>();
     ArrayList<String> uName=new  ArrayList<String>();
+    ArrayList<String> location=new  ArrayList<String>();
     ArrayList<View> v=new ArrayList<View>();
     public int count=3;
     long lastTime;
-    int p=0;
+    Handler mUIHandler = new Handler();
+    HandlerThread mThread;
+    Handler mThreadHandler;
 
     public MyAdapter(Context c,long lastTime) {
         mContext = c;
@@ -82,6 +91,10 @@ public class MyAdapter extends BaseAdapter{
                 TextView timeView=(TextView)convertView.findViewById(R.id.timeView);
                 ImageView photoView=(ImageView)convertView.findViewById(R.id.photoView);
                 TextView contentView=(TextView)convertView.findViewById(R.id.content);
+                TextView locationView=(TextView)convertView.findViewById(R.id.locationView);
+                if(location.get(position-1)!=null){
+                    locationView.setText("From:"+location.get(position-1));
+                }
 
                 if(uIcon.get(position-1)!=null){
                     Bitmap bitmap= BitmapFactory.decodeByteArray(uIcon.get(position-1), 0, uIcon.get(position-1).length);
@@ -97,7 +110,14 @@ public class MyAdapter extends BaseAdapter{
                     photoView.setImageBitmap(bitmap);
                     photoView.setVisibility(View.VISIBLE);
                 }
-                contentView.setText(sContent.get(position-1));
+                if(sContent.get(position-1)==null){
+                    contentView.setVisibility(View.VISIBLE);
+                }
+                else {
+                    contentView.setText(sContent.get(position - 1));
+                    contentView.setVisibility(View.VISIBLE);
+                }
+
             }
             v.add(position,convertView);
         }
@@ -105,10 +125,60 @@ public class MyAdapter extends BaseAdapter{
     }
 
     public void firstGetData() {
+//        //=============================遠端資料庫===================
+//        MyDBHelper d=new MyDBHelper(mContext);
+//        SQLiteDatabase d2=d.getWritableDatabase();
+//        d2.execSQL("DELETE FROM Status");
+//        d2.close();
+//        d.close();
+//        //===================先清除本地端
+//        mThread = new HandlerThread("net");
+//        mThread.start();
+//        mThreadHandler = new Handler(mThread.getLooper());
+//
+//        if(mThreadHandler != null){
+//            mThreadHandler.removeCallbacksAndMessages(null);
+//        }
+//        mThreadHandler.post(new Runnable() {
+//            @Override
+//            public void run() {
+//                DataRetrieve d = new DataRetrieve();
+//                try {
+//                    final ArrayList<HashMap<String, Object>> result = d.getStatus(10);
+//                    if (result != null) {
+//                        mUIHandler.post(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                MyDBHelper d3=new MyDBHelper(mContext);
+//                                SQLiteDatabase d4=d3.getWritableDatabase();
+//                                MainActivity m2=(MainActivity)mContext;
+//                                for(int i=0;i<10;i++){
+//                                    ContentValues values = new ContentValues();
+//                                    values.put("Time",Long.parseLong(result.get(i).get("Time").toString()));
+//                                    String temp=result.get(i).get("Photo").toString();
+//                                    byte[] bytes=Base64.decode(temp,Base64.DEFAULT);
+//                                    values.put("Photo",bytes);
+//                                    values.put("Content",result.get(i).get("Content").toString());
+//                                    values.put("UserID",m2.tempId);
+//                                }
+//                            }
+//                        });
+//                        Toast.makeText(mContext,"成功", Toast.LENGTH_SHORT).show();
+//                    }
+//                    else {
+//                        Toast.makeText(mContext, "no status!", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//                catch (Exception e){
+//                    Log.e("error", e.toString());
+//                }
+//            }
+//        });
+//        //==========================================================
         try {
             MyDBHelper myDBHelper = new MyDBHelper(mContext);
             SQLiteDatabase db = myDBHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name " +
+            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name,Status.Location " +
                     "FROM Status,User " +
                     "WHERE Status.UserID=User.ID and Status.Time<=" +lastTime+" "+
                     "ORDER BY Status.Time DESC", null);
@@ -124,9 +194,14 @@ public class MyAdapter extends BaseAdapter{
                     uID.add(cursor.getInt(4));
                     uIcon.add(cursor.getBlob(5));
                     uName.add(cursor.getString(6));
+                    String l=cursor.getString(7);
+                    location.add(cursor.getString(7));
                     v.add(null);
                     cursor.moveToNext();
                 }
+            }
+            else{
+                count=0;
             }
             db.close();
             myDBHelper.close();
@@ -142,17 +217,14 @@ public class MyAdapter extends BaseAdapter{
         try {
             MyDBHelper myDBHelper = new MyDBHelper(mContext);
             SQLiteDatabase db = myDBHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name " +
+            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name,Status.Location " +
                     "FROM Status,User " +
                     "WHERE Status.UserID=User.ID and Status.Time>" +lastTime+" and Status.Time<="+nowTime+" "+
                     "ORDER BY Status.Time ASC", null);//按時間順序
             if (cursor != null && cursor.getCount() > 0) {
-                int round=3;
-                if(cursor.getCount()<round)
-                    round=cursor.getCount();
-                count+=round;//新增增加count量
+                count+=cursor.getCount();//新增增加count量
                 cursor.moveToFirst();
-                for (int i = 0; i < round; i++) {//新增資料全從第一個開始
+                for (int i = 0; i < cursor.getCount(); i++) {//新增資料全從第一個開始
                     sID.add(0,cursor.getInt(0));
                     sTime.add(0,new java.text.SimpleDateFormat("yyyy MM-dd HH:mm:ss").format(new java.util.Date(cursor.getLong(1))));
                     sPhoto.add(0,cursor.getBlob(2));
@@ -160,6 +232,7 @@ public class MyAdapter extends BaseAdapter{
                     uID.add(0,cursor.getInt(4));
                     uIcon.add(0,cursor.getBlob(5));
                     uName.add(0,cursor.getString(6));
+                    location.add(0,cursor.getString(7));
                     v.add(1,null);
                     cursor.moveToNext();
                 }

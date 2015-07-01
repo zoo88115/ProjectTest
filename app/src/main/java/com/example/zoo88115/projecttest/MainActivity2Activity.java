@@ -6,11 +6,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,6 +27,9 @@ import android.os.Build;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class MainActivity2Activity extends ActionBarActivity {
@@ -38,8 +47,9 @@ public class MainActivity2Activity extends ActionBarActivity {
                         .add(R.id.container2, new PlaceholderFragment())
                         .commit();
             }
-            else
+            else {
                 changeAcitvity();
+            }
         }
     }
 
@@ -81,7 +91,12 @@ public class MainActivity2Activity extends ActionBarActivity {
     }
 
     public void changeAcitvity(){
+
+        Bundle bundle = new Bundle();
+        bundle.putString("tempId",String.valueOf(tempId));
+        bundle.putString("tempEmail",tempEmail);
         Intent myIntent = new Intent(this, MainActivity.class);
+        myIntent.putExtras(bundle);
         startActivity(myIntent);
         finish();
     }
@@ -114,6 +129,12 @@ public class MainActivity2Activity extends ActionBarActivity {
      */
     public static class PlaceholderFragment extends Fragment implements View.OnClickListener{
 
+        private Handler mUIHandler = new Handler();
+        private HandlerThread mThread;
+        private Handler mThreadHandler;
+        private Handler mUIHandler2 = new Handler();
+        private HandlerThread mThread2;
+        private Handler mThreadHandler2;
         EditText email,password;
         public PlaceholderFragment() {
         }
@@ -122,63 +143,157 @@ public class MainActivity2Activity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_login, container, false);
+            mThread = new HandlerThread("net");
+            mThread.start();
+            mThreadHandler = new Handler(mThread.getLooper());
+            mThread2 = new HandlerThread("net");
+            mThread2.start();
+            mThreadHandler2 = new Handler(mThread2.getLooper());
             Button login = (Button)rootView.findViewById(R.id.login);
             Button register = (Button)rootView.findViewById(R.id.register);
             login.setOnClickListener(this);
             register.setOnClickListener(this);
             email=(EditText)rootView.findViewById(R.id.email);
             password=(EditText)rootView.findViewById(R.id.password);
+            updateTable();
             return rootView;
         }
 
         @Override
         public void onClick(View v) {
             if(v.getId() == R.id.login){
-                if(valid(email.getText().toString(),password.getText().toString())==true) {
-                    MainActivity2Activity parent = (MainActivity2Activity) this.getActivity();
-                    parent.changeAcitvity();
+                //====================================登入判斷
+                //使用遠端資料庫
+                if(mThreadHandler != null){
+                    mThreadHandler.removeCallbacksAndMessages(null);
                 }
-                else{
-                    Toast.makeText(getActivity(),"輸入錯誤",Toast.LENGTH_SHORT).show();
-                }
+                mThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        DataRetrieve d = new DataRetrieve();
+                        final ArrayList<HashMap<String, Object>> result = d.login(email.getText().toString(), password.getText().toString());
+                        if(result != null) {
+                            mUIHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    MainActivity2Activity m2=(MainActivity2Activity)getActivity();
+                                    String s1 = result.get(0).get("ID").toString();
+                                    m2.tempId=Integer.valueOf(s1);
+                                    String s2 = result.get(0).get("Account").toString();
+                                    m2.tempEmail=s2;
+                                    store();
+                                    m2.changeAcitvity();
+                                }
+                            });
+                        }
+                        else{
+                            Toast.makeText(getActivity(), "輸入錯誤!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                //====================================
+//                if(valid(email.getText().toString(),password.getText().toString())==true) {
+//                    MainActivity2Activity parent = (MainActivity2Activity) this.getActivity();
+//                    parent.useStore();
+//                    parent.changeAcitvity();
+//                }
+//                else{
+//                    Toast.makeText(getActivity(),"輸入錯誤",Toast.LENGTH_SHORT).show();
+//                }
             }
             else if(v.getId() == R.id.register){
                 MainActivity2Activity parent = (MainActivity2Activity)this.getActivity();
                 parent.switchFragment(1);
             }
         }
-        private boolean valid(String e,String p){
-            MyDBHelper myDBHelper=new MyDBHelper(this.getActivity());
-            SQLiteDatabase db=myDBHelper.getReadableDatabase();
-            Cursor cursor =db.query("User", // a. table
-                    new String[] {"ID", "Email","Password"}, // b. column names
-                    "Email = ? and Password=?",                          // selections
-                    new String[] {e,p},  // selections args
-                    null, // e. group by
-                    null, // f. having
-                    "ID desc", // g. order by
-                    null);
-            if(cursor.getCount()>0){
-                cursor.moveToFirst();
-                store(cursor.getInt(0),cursor.getString(1));
-                cursor.close();
-                myDBHelper.close();
-                return true;
-            }
-            cursor.close();
-            myDBHelper.close();
-            return false;
-        }
+//        private boolean valid(String e,String p){
+//            MyDBHelper myDBHelper=new MyDBHelper(this.getActivity());
+//            SQLiteDatabase db=myDBHelper.getReadableDatabase();
+//            Cursor cursor =db.query("User", // a. table
+//                    new String[] {"ID", "Email","Password"}, // b. column names
+//                    "Email = ? and Password=?",                          // selections
+//                    new String[] {e,p},  // selections args
+//                    null, // e. group by
+//                    null, // f. having
+//                    "ID desc", // g. order by
+//                    null);
+//            if(cursor.getCount()>0){
+//                cursor.moveToFirst();
+//                store(cursor.getInt(0),cursor.getString(1));
+//                cursor.close();
+//                myDBHelper.close();
+//                return true;
+//            }
+//            cursor.close();
+//            myDBHelper.close();
+//            return false;
+//        }
 
-        private void store(int id,String email){
+        private void store(){
+            MainActivity2Activity m2=(MainActivity2Activity)getActivity();
             MyDBHelper myDBHelper=new MyDBHelper(this.getActivity());
             SQLiteDatabase db=myDBHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
-            values.put("id",id);
-            values.put("Email",email);
+            values.put("id",m2.tempId);
+            values.put("Email",m2.tempEmail);
             db.insert("Temp",null,values);
             db.close();
             myDBHelper.close();
+        }
+
+        public void updateTable(){
+            //================================先清除資料表
+            try {
+                MyDBHelper myDBHelper = new MyDBHelper(getActivity());
+                SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                db.execSQL("DELETE FROM User");
+                db.close();
+                myDBHelper.close();
+            }
+            catch (Exception e){
+                Toast.makeText(getActivity(),"ERROR",Toast.LENGTH_SHORT).show();
+            }
+            //===================================
+            if(mThreadHandler2 != null){
+                mThreadHandler2.removeCallbacksAndMessages(null);
+            }
+            mThreadHandler2.post(new Runnable() {
+                @Override
+                public void run() {
+                    DataRetrieve d = new DataRetrieve();
+                    try {
+                        final ArrayList<HashMap<String, Object>> result = d.getAllUser();
+                        if (result != null) {
+                            mUIHandler2.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    for(int i=0;i<result.size();i++){
+                                        MyDBHelper myDBHelper = new MyDBHelper(getActivity());
+                                        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                                        ContentValues values=new ContentValues();
+                                        values.put("ID",result.get(i).get("ID").toString());
+                                        values.put("Email",result.get(i).get("Account").toString());
+                                        values.put("Name",result.get(i).get("Name").toString());
+                                        byte[] bytes=Base64.decode(result.get(i).get("Icon").toString(), Base64.DEFAULT);
+                                        values.put("Icon",bytes);
+                                        db.insert("User", null, values);
+                                        Toast.makeText(getActivity(),result.get(i).get("ID").toString()+"\n"+result.get(i).get("Account").toString()+"\n"+result.get(i).get("Name").toString()+"\n"+result.get(i).get("Icon").toString(),Toast.LENGTH_SHORT).show();
+                                        db.close();
+                                        myDBHelper.close();
+                                    }
+                                }
+                            });
+                            Toast.makeText(getActivity(),"結束",Toast.LENGTH_LONG).show();
+                        }
+                        else {
+                            Toast.makeText(getActivity(), "no status!", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    catch (Exception e){
+                        Log.e("error", e.toString());
+                    }
+                }
+            });
         }
     }
 
@@ -215,4 +330,5 @@ public class MainActivity2Activity extends ActionBarActivity {
         }
         return true;
     }
+
 }

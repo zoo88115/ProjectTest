@@ -58,7 +58,7 @@ public class ChangePasswordFragment extends Fragment implements View.OnClickList
     }
 
     private boolean ifOldPasswordCorrect(){
-        MainActivity2Activity p=(MainActivity2Activity)getActivity();
+        MainActivity p=(MainActivity)getActivity();
         MyDBHelper dbHelper = new MyDBHelper(this.getActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor cursor =
@@ -89,12 +89,12 @@ public class ChangePasswordFragment extends Fragment implements View.OnClickList
     }
 
     private void updatePassword(){
-        MainActivity2Activity p=(MainActivity2Activity)getActivity();
+        MainActivity p=(MainActivity)getActivity();
         MyDBHelper dbHelper = new MyDBHelper(this.getActivity());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("Password",t2.getText().toString());
-        db.update("User", values, "Email = ?", new String[]{p.tempEmail});  //給條件 mail相同
+        db.update("User", values, "ID = ?", new String[]{p.tempId});  //給條件 mail相同
         db.close();
         dbHelper.close();
     }

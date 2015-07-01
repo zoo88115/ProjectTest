@@ -58,16 +58,21 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:orientation="vertical"
-                        android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:layout_weight="0.57">
+                        android:orientation="horizontal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="20dp">
 
                         <TextView
-                            android:layout_width="match_parent"
+                            android:layout_width="172dp"
                             android:layout_height="wrap_content"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:id="@+id/timeView" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:id="@+id/locationView" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -87,7 +92,8 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:id="@+id/content"
                     android:layout_weight="0.21"
-                    android:singleLine="false" />
+                    android:singleLine="false"
+                    android:visibility="visible" />
 
                 <ImageView
                     android:layout_width="fill_parent"

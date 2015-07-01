@@ -6,6 +6,7 @@ import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -37,7 +38,6 @@ import java.io.FileNotFoundException;
 
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
-
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -47,19 +47,22 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-
+    public String tempId,tempEmail;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Bundle bundle = getIntent().getExtras();
+        tempId=bundle.get("tempId").toString();
+        tempEmail=bundle.get("tempEmail").toString();
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
 
         // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
+         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
     }
@@ -79,16 +82,30 @@ public class MainActivity extends ActionBarActivity
                 fragment=new AddFragment();//更改照片
                 break;
             case 3:
-                fragment=new AddStatusFragment();//更改名稱,更改密碼,退出
+                fragment=new ChangeNameFragment();//更改名稱
+                break;
+            case 4:
+                fragment=new ChangePasswordFragment();//更改密碼
+                break;
+            case 5:
+                MyDBHelper myDBHelper=new MyDBHelper(this);
+                SQLiteDatabase db=myDBHelper.getWritableDatabase();
+                db.delete("Temp","ID=?",new String[]{tempId});
+                db.close();
+                myDBHelper.close();
                 break;
             case 99:
                 fragment=new PostNewsFragment();
                 break;
         }
+        if(position==5){
+            changeAcitvity();
+        }else {
             FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction()
                     .replace(R.id.container, fragment)
                     .commit();
+        }
     }
 
     public void onSectionAttached(int number) {
@@ -108,7 +125,15 @@ public class MainActivity extends ActionBarActivity
             case 5:
                 mTitle = getString(R.string.title_section5);
                 break;
+            case 6:
+                mTitle=getString(R.string.title_section6);
         }
+    }
+
+    public void changeAcitvity(){
+        Intent myIntent = new Intent(this, MainActivity2Activity.class);
+        startActivity(myIntent);
+        finish();
     }
 
     public void restoreActionBar() {

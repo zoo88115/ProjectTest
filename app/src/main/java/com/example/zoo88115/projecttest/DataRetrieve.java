@@ -1,9 +1,6 @@
 package com.example.zoo88115.projecttest;
 
-import android.content.Context;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.widget.Toast;
+import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -29,48 +26,102 @@ import java.util.HashMap;
  */
 public class DataRetrieve {
 
-    private Handler mUIHandler = new Handler();
-    private HandlerThread mThread;
-    private Handler mThreadHandler;
-    private String uriAPI = "http://203.64.84.122/httppostjson.php";
-    private Context mContext;
+    private String uriAPI = "http://203.64.84.122/login.php";
+    private String uriAPI2 = "http://203.64.84.122/getstatus.php";
+    private String uriAPI3="http://203.64.84.122/getusers.php";
 
-    public DataRetrieve(Context context){
-        this.mContext = context;
-        mThread = new HandlerThread("net");
-        mThread.start();
-        mThreadHandler = new Handler(mThread.getLooper());
+    public DataRetrieve(){
     }
-
-    public final void reNew(String input){
+    private ArrayList<HashMap<String, Object>> parseJson(String input){
         try{
             JSONArray jsonArray = new JSONArray(input);
             ArrayList<HashMap<String, Object>> users = new ArrayList<HashMap<String, Object>>();
             for(int i = 0; i < jsonArray.length(); i++){
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 HashMap<String, Object> h2 = new HashMap<String, Object>();
-                h2.put("A1", jsonObject.getString("A1"));
-                h2.put("A2", jsonObject.getString("A2"));
-                h2.put("A3", jsonObject.getString("A3"));
+                h2.put("ID", jsonObject.getString("ID"));
+                h2.put("Icon", jsonObject.getString("Icon"));
+                h2.put("Account", jsonObject.getString("Account"));
                 users.add(h2);
-                Toast.makeText(mContext, users.get(0).get("A1").toString() + " " + users.get(0).get("A2").toString() + " " + users.get(0).get("A3").toString(), Toast.LENGTH_SHORT).show();
             }
+            return users;
         }
         catch (JSONException e){
-            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+            Log.e("Failed!", e.toString());
         }
+        return null;
     }
-    private String executeQuery(String query){
+    private ArrayList<HashMap<String, Object>> parseJson2(String input){
+        try{
+            JSONArray jsonArray = new JSONArray(input);
+            ArrayList<HashMap<String, Object>> users = new ArrayList<HashMap<String, Object>>();
+            for(int i = 0; i < jsonArray.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                HashMap<String, Object> h2 = new HashMap<String, Object>();
+                h2.put("Time", jsonObject.getString("Time"));
+                h2.put("Photo", jsonObject.getString("Photo"));
+                h2.put("Content", jsonObject.getString("Content"));
+                users.add(h2);
+            }
+            return users;
+        }
+        catch (JSONException e){
+            Log.e("Failed!", e.toString());
+        }
+        return null;
+    }
+
+    private ArrayList<HashMap<String, Object>> parseJson3(String input){
+        try{
+            JSONArray jsonArray = new JSONArray(input);
+            ArrayList<HashMap<String, Object>> users = new ArrayList<HashMap<String, Object>>();
+            for(int i = 0; i < jsonArray.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                HashMap<String, Object> h2 = new HashMap<String, Object>();
+                h2.put("ID", jsonObject.getString("ID"));
+                h2.put("Icon", jsonObject.getString("Icon"));
+                h2.put("Account", jsonObject.getString("Account"));
+                h2.put("Name",jsonObject.getString("Name"));
+                users.add(h2);
+            }
+            return users;
+        }
+        catch (JSONException e){
+            Log.e("Failed!", e.toString());
+        }
+        return null;
+    }
+
+    private String executeQuery(String query, String query2){
         String result = "";
 
         try{
             HttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(uriAPI);
+            HttpPost httpPost = null;
+            if(query.equals("*")&&query2.equals("*")){
+                httpPost = new HttpPost(uriAPI3);
+            }
+            else if(!query2.equals("")){
+                httpPost = new HttpPost(uriAPI);
+            }
+            else{
+                httpPost = new HttpPost(uriAPI2);
+            }
             ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-            nameValuePairs.add(new BasicNameValuePair("data", query));
+            if(query.equals("*")&&query2.equals("*")){
+                nameValuePairs.add(new BasicNameValuePair("data", query));
+            }
+            else if(!query2.equals("")){
+                nameValuePairs.add(new BasicNameValuePair("account", query));
+                nameValuePairs.add(new BasicNameValuePair("password", query2));
+            }
+            else{
+                nameValuePairs.add(new BasicNameValuePair("count", query));
+            }
             httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs, HTTP.UTF_8));
             HttpResponse httpResponse = httpClient.execute(httpPost);
             HttpEntity httpEntity = httpResponse.getEntity();
+
             InputStream inputStream = httpEntity.getContent();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
             StringBuilder stringBuilder = new StringBuilder();
@@ -83,27 +134,38 @@ public class DataRetrieve {
             result = stringBuilder.toString();
         }
         catch (Exception e){
-            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+            Log.e("Failed!", e.toString());
         }
         return result;
     }
-    public void getData(String query){
-        final String txt = query;
-        mThreadHandler.post(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                final String jsonString = executeQuery(txt);
-                mUIHandler.post(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        reNew(jsonString);
-                    }
-                });
+    public ArrayList<HashMap<String, Object>> login(String account, String password){
+        final String result = executeQuery(account, password);
+        if(!result.equals("")){
+            final ArrayList<HashMap<String,Object>> output = parseJson(result);
+            if(output != null){
+                return output;
             }
-        });
+        }
+        return null;
+    }
+    public ArrayList<HashMap<String, Object>> getStatus(int count){
+        final String result = executeQuery(Integer.toString(count), "");
+        if(!result.equals("")){
+            final ArrayList<HashMap<String, Object>> output = parseJson2(result);
+            if(output != null){
+                return output;
+            }
+        }
+        return null;
+    }
+    public ArrayList<HashMap<String, Object>> getAllUser(){
+        final String result = executeQuery("*","*");
+        if(!result.equals("")){
+            final ArrayList<HashMap<String,Object>> output = parseJson3(result);
+            if(output != null){
+                return output;
+            }
+        }
+        return null;
     }
 }

@@ -35,11 +35,11 @@ import java.io.FileNotFoundException;
 public class AddFragment extends Fragment {
 
     Bitmap viewImage=null;
-    private EditText n;
+
     private Button b,rotateButton;
     private Button testAdd,testUse,open;
     private Button t1,t2;
-    private ImageView picture,testPic;
+    private ImageView picture;
     static int TAKE_PICTURE = 1;
     private String filename;
     Uri fileUri;
@@ -55,29 +55,8 @@ public class AddFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView= inflater.inflate(R.layout.fragment_add, container, false);
-        t1=(Button)rootView.findViewById(R.id.button4);
-        t1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                byte[] data;
-                data=iconToByte();
-                if(data!=null) {
-                    MyDBHelper dbHelper = new MyDBHelper(getActivity());
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    ContentValues values = new ContentValues();
-                    values.put("TestIcon", data);
-                    db.insert("Test", null, values);
-                    db.close();
-                    dbHelper.close();
-                    Toast.makeText(getActivity(),"新增成功",Toast.LENGTH_SHORT).show();
-                }
-                else
-                    Toast.makeText(getActivity(),"沒圖片新增失敗",Toast.LENGTH_SHORT).show();
-                }
-        });
-        testPic=(ImageView)rootView.findViewById(R.id.imageView2);
+
         picture=(ImageView)rootView.findViewById(R.id.addIcon);
-        //testPic=(ImageView)rootView.findViewById(R.id.imageView2);
         open=(Button)rootView.findViewById(R.id.button3);
         open.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,7 +68,12 @@ public class AddFragment extends Fragment {
             }
         });
         b=(Button)rootView.findViewById(R.id.button5);
-        n=(EditText)rootView.findViewById(R.id.addName);
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePicture();
+            }
+        });
         rotateButton=(Button)rootView.findViewById(R.id.rotateButton);
         rotateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -115,43 +99,24 @@ public class AddFragment extends Fragment {
             public void onClick(View v) {
                 byte[] data;
                 data=iconToByte();
-                if(data!=null && n.getText().toString().equals("")!=true) {
+                if(data!=null) {
                     MyDBHelper dbHelper = new MyDBHelper(getActivity());
                     SQLiteDatabase db = dbHelper.getWritableDatabase();
+                    MainActivity m=(MainActivity)getActivity();
                     ContentValues values = new ContentValues();
-                    values.put("Name",n.getText().toString());
                     values.put("Icon", data);
-                    db.insert("User", null, values);
+                    db.update("User",values,"ID=?",new String[]{String.valueOf(m.tempId)});
                     db.close();
                     dbHelper.close();
                     Toast.makeText(getActivity(),"新增成功",Toast.LENGTH_SHORT).show();
-                    MainActivity m=(MainActivity)getActivity();
                     m.onNavigationDrawerItemSelected(0);
                 }
                 else
                     Toast.makeText(getActivity(),"沒圖片新增失敗",Toast.LENGTH_SHORT).show();
             }
         });
-        //下面是使用資料庫圖片
-        t2=(Button)rootView.findViewById(R.id.button7);
-        t2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bitmap bitmap;
-                bitmap=getByteToBitmap();
-                if(bitmap!=null){
-                    testPic.setImageBitmap(bitmap);
-                }
-                else
-                    Toast.makeText(getActivity(),"no data",Toast.LENGTH_SHORT).show();
-            }
-        });
-        b.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                takePicture();
-            }
-        });
+        viewImage=getByteToBitmap();
+        picture.setImageBitmap(viewImage);
         return rootView;
     }
 
@@ -221,19 +186,19 @@ public class AddFragment extends Fragment {
     public Bitmap getByteToBitmap(){
         byte[] b;
         Bitmap bitmap;
-        MyDBHelper dbHelper = new MyDBHelper(getActivity());
+        MainActivity m=(MainActivity)getActivity();
+        MyDBHelper dbHelper = new MyDBHelper(this.getActivity());
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor=db.query("Test",
-                new String[]{"TestIcon"},
+        Cursor cursor=db.query("User",
+                new String[]{"ID","Icon"},
+                "ID = ?",
+                new String[]{m.tempId},
                 null,
                 null,
-                null,
-                null,
-                null
-        );
+                null);
         if(cursor!=null && cursor.getCount()>0){
-            cursor.moveToLast();
-            b=cursor.getBlob(0);
+            cursor.moveToFirst();
+            b=cursor.getBlob(1);
             bitmap=BitmapFactory.decodeByteArray(b,0,b.length);
             db.close();
             dbHelper.close();

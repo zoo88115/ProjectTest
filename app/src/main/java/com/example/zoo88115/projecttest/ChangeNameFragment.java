@@ -30,7 +30,7 @@ public class ChangeNameFragment extends Fragment implements View.OnClickListener
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        MainActivity2Activity parent = (MainActivity2Activity)this.getActivity();
+        MainActivity parent = (MainActivity)this.getActivity();
         View rootView=inflater.inflate(R.layout.fragment_change_name, container, false);
         changeName=(EditText)rootView.findViewById(R.id.editChangeName);
         changeName.setText(getName(parent.tempEmail));
@@ -73,7 +73,7 @@ public class ChangeNameFragment extends Fragment implements View.OnClickListener
     }
 
     public void updateName(){
-        MainActivity2Activity parent = (MainActivity2Activity)this.getActivity();
+        MainActivity parent = (MainActivity)this.getActivity();
         MyDBHelper dbHelper = new MyDBHelper(this.getActivity());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
