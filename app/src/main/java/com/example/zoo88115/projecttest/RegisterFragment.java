@@ -223,6 +223,7 @@ public class RegisterFragment extends Fragment implements View.OnClickListener{
                                     values.put("ID",result.get(i).get("ID").toString());
                                     values.put("Email",result.get(i).get("Account").toString());
                                     values.put("Name",result.get(i).get("Name").toString());
+                                    values.put("Password",result.get(i).get("Password").toString());
                                     byte[] bytes=Base64.decode(result.get(i).get("Icon").toString(), Base64.DEFAULT);
                                     values.put("Icon",bytes);
                                     db.insert("User", null, values);

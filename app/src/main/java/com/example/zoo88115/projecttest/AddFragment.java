@@ -13,8 +13,11 @@ import android.graphics.Matrix;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.Fragment;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,6 +47,9 @@ public class AddFragment extends Fragment {
     private String filename;
     Uri fileUri;
     static int PHOTO=2;
+
+    private HandlerThread mThread;
+    private Handler mThreadHandler;
 
     public AddFragment() {
         // Required empty public constructor
@@ -108,8 +114,43 @@ public class AddFragment extends Fragment {
                     db.update("User",values,"ID=?",new String[]{String.valueOf(m.tempId)});
                     db.close();
                     dbHelper.close();
-                    Toast.makeText(getActivity(),"新增成功",Toast.LENGTH_SHORT).show();
-                    m.onNavigationDrawerItemSelected(0);
+
+                    MyDBHelper dbHelper2=new MyDBHelper(getActivity());
+                    SQLiteDatabase db2=dbHelper2.getReadableDatabase();
+                    Cursor cursor2 = db2.query("User",
+                            new String[]{"ID","Email","Password","Icon","Name"},
+                            "ID=? ",
+                            new String[]{m.tempId},
+                            null,
+                            null,
+                            null);
+                    cursor2.moveToFirst();
+                    final int tid=cursor2.getInt(0);
+                    final String tmail=cursor2.getString(1);
+                    final String tpa=cursor2.getString(2);
+                    byte[] tb=cursor2.getBlob(3);
+                    final String base= Base64.encodeToString(tb, Base64.DEFAULT);
+                    final String tn=cursor2.getString(4);
+
+                    if(mThreadHandler != null){
+                        mThreadHandler.removeCallbacksAndMessages(null);
+                    }
+                    mThreadHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            DataStore d = new DataStore();
+                            String encodeResult = null;
+                            final boolean result = d.updateUser(tid, tmail,tpa , base, tn);
+                            if(result){
+                                Toast.makeText(getActivity(), "更新成功", Toast.LENGTH_SHORT).show();
+                                MainActivity m=(MainActivity)getActivity();
+                                m.onNavigationDrawerItemSelected(0);
+                            }
+                            else{
+                                Toast.makeText(getActivity(), "failed", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
                 else
                     Toast.makeText(getActivity(),"沒圖片新增失敗",Toast.LENGTH_SHORT).show();
@@ -117,6 +158,10 @@ public class AddFragment extends Fragment {
         });
         viewImage=getByteToBitmap();
         picture.setImageBitmap(viewImage);
+
+        mThread = new HandlerThread("net");
+        mThread.start();
+        mThreadHandler = new Handler(mThread.getLooper());
         return rootView;
     }
 

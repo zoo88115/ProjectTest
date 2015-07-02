@@ -82,6 +82,7 @@ public class DataRetrieve {
                 h2.put("Icon", jsonObject.getString("Icon"));
                 h2.put("Account", jsonObject.getString("Account"));
                 h2.put("Name",jsonObject.getString("Name"));
+                h2.put("Password",jsonObject.get("Password"));
                 users.add(h2);
             }
             return users;

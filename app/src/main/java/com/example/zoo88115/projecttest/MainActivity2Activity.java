@@ -136,6 +136,8 @@ public class MainActivity2Activity extends ActionBarActivity {
         private HandlerThread mThread2;
         private Handler mThreadHandler2;
         EditText email,password;
+        Button login2,register2;
+
         public PlaceholderFragment() {
         }
 
@@ -149,10 +151,10 @@ public class MainActivity2Activity extends ActionBarActivity {
             mThread2 = new HandlerThread("net");
             mThread2.start();
             mThreadHandler2 = new Handler(mThread2.getLooper());
-            Button login = (Button)rootView.findViewById(R.id.login);
-            Button register = (Button)rootView.findViewById(R.id.register);
-            login.setOnClickListener(this);
-            register.setOnClickListener(this);
+            login2 = (Button)rootView.findViewById(R.id.login);
+            register2 = (Button)rootView.findViewById(R.id.register);
+            login2.setOnClickListener(this);
+            register2.setOnClickListener(this);
             email=(EditText)rootView.findViewById(R.id.email);
             password=(EditText)rootView.findViewById(R.id.password);
             updateTable();
@@ -162,6 +164,8 @@ public class MainActivity2Activity extends ActionBarActivity {
         @Override
         public void onClick(View v) {
             if(v.getId() == R.id.login){
+                login2.setClickable(false);
+                register2.setClickable(false);
                 //====================================登入判斷
                 //使用遠端資料庫
                 if(mThreadHandler != null){
@@ -182,12 +186,16 @@ public class MainActivity2Activity extends ActionBarActivity {
                                     String s2 = result.get(0).get("Account").toString();
                                     m2.tempEmail=s2;
                                     store();
+                                    login2.setClickable(true);
+                                    register2.setClickable(true);
                                     m2.changeAcitvity();
                                 }
                             });
                         }
                         else{
                             Toast.makeText(getActivity(), "輸入錯誤!", Toast.LENGTH_SHORT).show();
+                            login2.setClickable(true);
+                            register2.setClickable(true);
                         }
                     }
                 });
@@ -274,6 +282,7 @@ public class MainActivity2Activity extends ActionBarActivity {
                                         values.put("ID",result.get(i).get("ID").toString());
                                         values.put("Email",result.get(i).get("Account").toString());
                                         values.put("Name",result.get(i).get("Name").toString());
+                                        values.put("Password",result.get(i).get("Password").toString());
                                         byte[] bytes=Base64.decode(result.get(i).get("Icon").toString(), Base64.DEFAULT);
                                         values.put("Icon",bytes);
                                         db.insert("User", null, values);
@@ -283,6 +292,7 @@ public class MainActivity2Activity extends ActionBarActivity {
                                     }
                                 }
                             });
+                            mThread2.join();
                             Toast.makeText(getActivity(),"結束",Toast.LENGTH_LONG).show();
                         }
                         else {

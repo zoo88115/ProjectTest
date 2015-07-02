@@ -23,6 +23,8 @@ import java.util.ArrayList;
 public class DataStore {
     private String uriAPI = "http://203.64.84.122/register.php";
     private String uriAPI2 = "http://203.64.84.122/postarticle.php";
+    private String uriAPI3 = "http://203.64.84.122/userupdate.php";
+
 
     public DataStore(){
     }
@@ -72,6 +74,42 @@ public class DataStore {
             nameValuePairs.add(new BasicNameValuePair("photo", photo));
             nameValuePairs.add(new BasicNameValuePair("userid", Integer.toString(userID)));
             nameValuePairs.add(new BasicNameValuePair("location",Location));
+            httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs, HTTP.UTF_8));
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            HttpEntity httpEntity = httpResponse.getEntity();
+
+            InputStream inputStream = httpEntity.getContent();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "utf-8"));
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = null;
+            while ((line = bufferedReader.readLine()) != null)
+            {
+                stringBuilder.append(line + "\n");
+            }
+            inputStream.close();
+            result = stringBuilder.toString();
+        }
+        catch (Exception e){
+            Log.e("Failed!", e.toString());
+        }
+        if(result.equals("success\n")){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean updateUser(int userID,String account, String password, String icon,String Name){
+        String result = "";
+
+        try{
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(uriAPI3);
+            ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+            nameValuePairs.add(new BasicNameValuePair("id", Integer.toString(userID)));
+            nameValuePairs.add(new BasicNameValuePair("account", account));
+            nameValuePairs.add(new BasicNameValuePair("password", password));
+            nameValuePairs.add(new BasicNameValuePair("icon", icon));
+            nameValuePairs.add(new BasicNameValuePair("name", Name));
             httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs, HTTP.UTF_8));
             HttpResponse httpResponse = httpClient.execute(httpPost);
             HttpEntity httpEntity = httpResponse.getEntity();

@@ -5,7 +5,10 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +23,8 @@ import android.widget.Toast;
 public class ChangeNameFragment extends Fragment implements View.OnClickListener{
     EditText changeName;
     Button btn1,btn2;
+    private HandlerThread mThread;
+    private Handler mThreadHandler;
 
     public ChangeNameFragment() {
         // Required empty public constructor
@@ -38,6 +43,9 @@ public class ChangeNameFragment extends Fragment implements View.OnClickListener
         btn2=(Button)rootView.findViewById(R.id.changeNameReturn);
         btn1.setOnClickListener(this);
         btn2.setOnClickListener(this);
+        mThread = new HandlerThread("net");
+        mThread.start();
+        mThreadHandler = new Handler(mThread.getLooper());
         return rootView;
     }
 
@@ -78,9 +86,43 @@ public class ChangeNameFragment extends Fragment implements View.OnClickListener
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("Name", changeName.getText().toString());
-
         db.update("User", values, "Email = ?", new String[]{parent.tempEmail});  //給條件 mail相同
         db.close();
         dbHelper.close();
+
+        MainActivity m=(MainActivity)getActivity();
+        MyDBHelper dbHelper2=new MyDBHelper(getActivity());
+        SQLiteDatabase db2=dbHelper2.getReadableDatabase();
+        Cursor cursor2 = db2.query("User",
+                new String[]{"ID","Email","Password","Icon","Name"},
+                "ID=? ",
+                new String[]{m.tempId},
+                null,
+                null,
+                null);
+        cursor2.moveToFirst();
+        final int tid=cursor2.getInt(0);
+        final String tmail=cursor2.getString(1);
+        final String tpa=cursor2.getString(2);
+        byte[] tb=cursor2.getBlob(3);
+        final String base= Base64.encodeToString(tb, Base64.DEFAULT);
+
+        if(mThreadHandler != null){
+            mThreadHandler.removeCallbacksAndMessages(null);
+        }
+        mThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                DataStore d = new DataStore();
+                String encodeResult = null;
+                final boolean result = d.updateUser(tid, tmail,tpa , base, changeName.getText().toString());
+                if(result){
+                    Toast.makeText(getActivity(), "更新成功", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(getActivity(), "failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 }
