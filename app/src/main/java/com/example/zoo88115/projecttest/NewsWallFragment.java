@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -42,6 +44,7 @@ public class NewsWallFragment extends Fragment {
     ImageView imageView;
     LinearLayout linearLayout;
     Animation animFadein;
+    View moreView,postView;
 
     public NewsWallFragment() {
         // Required empty public constructor
@@ -60,6 +63,29 @@ public class NewsWallFragment extends Fragment {
             updateText.setVisibility(View.GONE);
             if(isExist()>0){
                 listView = (ListView) rootView.findViewById(R.id.listView);
+                //==========測試=========
+                moreView = inflater.inflate(R.layout.getmore_layout, null);
+                postView = inflater.inflate(R.layout.post_layout, null);
+                listView.addHeaderView(postView);
+                listView.addFooterView(moreView);
+                TextView post=(TextView)postView.findViewById(R.id.postTextView);
+                post.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View v){
+                        MainActivity m=(MainActivity)getActivity();
+                        m.onNavigationDrawerItemSelected(99);
+                    }
+                });
+                Button button=(Button)moreView.findViewById(R.id.getMore);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        myAdapter.oldGetData();
+                        myAdapter.notifyDataSetChanged();
+                        listView.refreshDrawableState();
+                    }
+                });
+                //===========================
                 myAdapter = new MyAdapter(getActivity(), now.getTime());
                 listView.setAdapter(myAdapter);
                 listView.setOnTouchListener(new View.OnTouchListener() {
@@ -94,6 +120,7 @@ public class NewsWallFragment extends Fragment {
                                     updateText.setVisibility(View.GONE);
                                     linearLayout.setVisibility(View.GONE);
                                     myAdapter.newGetData();
+                                    myAdapter.notifyDataSetChanged();;
                                     listView.refreshDrawableState();
                                     s = 0;
                                 }

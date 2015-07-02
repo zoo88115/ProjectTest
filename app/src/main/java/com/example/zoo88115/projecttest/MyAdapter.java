@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,7 +57,7 @@ public class MyAdapter extends BaseAdapter{
 
     @Override
     public int getCount() {
-        return count+1;
+        return count;
     }
 
     @Override
@@ -73,18 +74,6 @@ public class MyAdapter extends BaseAdapter{
     public View getView(int position, View convertView, ViewGroup parent) {
         View tempView=v.get(position);
         if(tempView == null){
-            if(position == 0 ){
-                convertView=inflater.inflate(R.layout.post_layout,null);
-                TextView post=(TextView)convertView.findViewById(R.id.postTextView);
-                post.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View v){
-                        MainActivity m=(MainActivity)mContext;
-                        m.onNavigationDrawerItemSelected(99);
-                    }
-                });
-            }
-            else{
                 convertView=inflater.inflate(R.layout.status_layout,null);
                 ImageView stickerView=(ImageView)convertView.findViewById(R.id.imageView);
                 TextView nameView=(TextView)convertView.findViewById(R.id.nameView);
@@ -92,89 +81,37 @@ public class MyAdapter extends BaseAdapter{
                 ImageView photoView=(ImageView)convertView.findViewById(R.id.photoView);
                 TextView contentView=(TextView)convertView.findViewById(R.id.content);
                 TextView locationView=(TextView)convertView.findViewById(R.id.locationView);
-                if(location.get(position-1)!=null){
-                    locationView.setText("From:"+location.get(position-1));
+                if(location.get(position)!=null){
+                    locationView.setText("From:"+location.get(position));
                 }
 
-                if(uIcon.get(position-1)!=null){
-                    Bitmap bitmap= BitmapFactory.decodeByteArray(uIcon.get(position-1), 0, uIcon.get(position-1).length);
+                if(uIcon.get(position)!=null){
+                    Bitmap bitmap= BitmapFactory.decodeByteArray(uIcon.get(position), 0, uIcon.get(position).length);
                     stickerView.setImageBitmap(bitmap);
                 }
-                nameView.setText(uName.get(position-1));
-                timeView.setText(sTime.get(position-1).toString());
-                if(sPhoto.get(position-1)==null){
+                nameView.setText(uName.get(position));
+                timeView.setText(sTime.get(position).toString());
+                if(sPhoto.get(position)==null){
                     photoView.setVisibility(View.GONE);//不可見，且不占用布局空間
                 }
                 else{
-                    Bitmap bitmap= BitmapFactory.decodeByteArray(sPhoto.get(position-1), 0, sPhoto.get(position-1).length);
+                    Bitmap bitmap= BitmapFactory.decodeByteArray(sPhoto.get(position), 0, sPhoto.get(position).length);
                     photoView.setImageBitmap(bitmap);
                     photoView.setVisibility(View.VISIBLE);
                 }
-                if(sContent.get(position-1)==null){
+                if(sContent.get(position)==null){
                     contentView.setVisibility(View.VISIBLE);
                 }
                 else {
-                    contentView.setText(sContent.get(position - 1));
+                    contentView.setText(sContent.get(position));
                     contentView.setVisibility(View.VISIBLE);
                 }
-
-            }
-            v.add(position,convertView);
+            v.set(position,convertView);
         }
         return v.get(position);
     }
 
     public void firstGetData() {
-//        //=============================遠端資料庫===================
-//        MyDBHelper d=new MyDBHelper(mContext);
-//        SQLiteDatabase d2=d.getWritableDatabase();
-//        d2.execSQL("DELETE FROM Status");
-//        d2.close();
-//        d.close();
-//        //===================先清除本地端
-//        mThread = new HandlerThread("net");
-//        mThread.start();
-//        mThreadHandler = new Handler(mThread.getLooper());
-//
-//        if(mThreadHandler != null){
-//            mThreadHandler.removeCallbacksAndMessages(null);
-//        }
-//        mThreadHandler.post(new Runnable() {
-//            @Override
-//            public void run() {
-//                DataRetrieve d = new DataRetrieve();
-//                try {
-//                    final ArrayList<HashMap<String, Object>> result = d.getStatus(10);
-//                    if (result != null) {
-//                        mUIHandler.post(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                MyDBHelper d3=new MyDBHelper(mContext);
-//                                SQLiteDatabase d4=d3.getWritableDatabase();
-//                                MainActivity m2=(MainActivity)mContext;
-//                                for(int i=0;i<10;i++){
-//                                    ContentValues values = new ContentValues();
-//                                    values.put("Time",Long.parseLong(result.get(i).get("Time").toString()));
-//                                    String temp=result.get(i).get("Photo").toString();
-//                                    byte[] bytes=Base64.decode(temp,Base64.DEFAULT);
-//                                    values.put("Photo",bytes);
-//                                    values.put("Content",result.get(i).get("Content").toString());
-//                                    values.put("UserID",m2.tempId);
-//                                }
-//                            }
-//                        });
-//                        Toast.makeText(mContext,"成功", Toast.LENGTH_SHORT).show();
-//                    }
-//                    else {
-//                        Toast.makeText(mContext, "no status!", Toast.LENGTH_SHORT).show();
-//                    }
-//                }
-//                catch (Exception e){
-//                    Log.e("error", e.toString());
-//                }
-//            }
-//        });
-//        //==========================================================
         try {
             MyDBHelper myDBHelper = new MyDBHelper(mContext);
             SQLiteDatabase db = myDBHelper.getReadableDatabase();
@@ -233,11 +170,53 @@ public class MyAdapter extends BaseAdapter{
                     uIcon.add(0,cursor.getBlob(5));
                     uName.add(0,cursor.getString(6));
                     location.add(0,cursor.getString(7));
-                    v.add(1,null);
+                    v.add(0,null);
                     cursor.moveToNext();
                 }
             }
             lastTime=nowTime;
+            db.close();
+            myDBHelper.close();
+        }
+        catch (Exception e){
+            Toast.makeText(mContext, e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    public void oldGetData() {
+        try {
+            MyDBHelper myDBHelper = new MyDBHelper(mContext);
+            SQLiteDatabase db = myDBHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT Status.ID,Status.Time,Status.Photo,Status.Content,Status.UserID,User.Icon,User.Name,Status.Location " +
+                    "FROM Status,User " +
+                    "WHERE Status.UserID=User.ID and Status.Time<" +lastTime+" "+
+                    "ORDER BY Status.Time DESC", null);//按時間順序
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                int i;
+                for(i=0;i<count;i++){
+                    cursor.moveToNext();
+                }
+                int w=0;
+                for (; i < cursor.getCount(); i++) {//新增資料全從第一個開始
+                    w++;
+                    sID.add(cursor.getInt(0));
+                    sTime.add(new java.text.SimpleDateFormat("yyyy MM-dd HH:mm:ss").format(new java.util.Date(cursor.getLong(1))));
+                    sPhoto.add(cursor.getBlob(2));
+                    sContent.add(cursor.getString(3));
+                    uID.add(cursor.getInt(4));
+                    uIcon.add(cursor.getBlob(5));
+                    uName.add(cursor.getString(6));
+                    location.add(cursor.getString(7));
+                    v.add(null);
+                    count+=1;//新增增加count量
+                    cursor.moveToNext();
+                    if(w>=9)
+                        break;
+                }
+                if(w==0){
+                    Toast.makeText(mContext,"無舊動態",Toast.LENGTH_SHORT).show();
+                }
+            }
             db.close();
             myDBHelper.close();
         }
